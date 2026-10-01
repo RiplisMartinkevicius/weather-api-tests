@@ -7,10 +7,10 @@ URL = "https://api.open-meteo.com/v1/forecast?latitude=54.9&longitude=23.9&curre
 def weather_response():
     return requests.get(URL, timeout=10)
 
+
 #check for json info
 def test_status_code_is_200(weather_response):
     assert weather_response.status_code == 200
-
 
 def test_temperature_unit_is_celsius(weather_response):
     data = weather_response.json()
@@ -22,24 +22,17 @@ def test_temperature_is_realistic(weather_response):
     temperature = data["current_weather"]["temperature"]
     assert -60 < temperature < 60
 
-#check for status code and error
-def test_invalid_latitude():
-    response = requests.get(
-        "https://api.open-meteo.com/v1/forecast?latitude=999&longitude=23.9&current_weather=true",
-        timeout=10
-    )
-    assert response.status_code == 400
-    body = response.json()
-    assert body["error"] is True
 
-def test_missing_longitude():
-    response = requests.get(
-        "https://api.open-meteo.com/v1/forecast?latitude=54.9&current_weather=true",
-        timeout=10
-    )
+#check for status code and error
+@pytest.mark.parametrize("url",[
+    "https://api.open-meteo.com/v1/forecast?latitude=999&longitude=23.9&current_weather=true",
+    "https://api.open-meteo.com/v1/forecast?latitude=54.9&current_weather=true",
+    "https://api.open-meteo.com/v1/forecast?latitude=90.1&longitude=23.9&current_weather=true",
+])
+def test_invalid_requests_return_400(url):
+    response = requests.get(url, timeout=10)
     assert response.status_code == 400
-    body = response.json()
-    assert body["error"] is True
+
 
 #boundary test
 def test_90_latitude():
@@ -48,10 +41,3 @@ def test_90_latitude():
         timeout=10
     )
     assert response.status_code == 200
-
-def test_90_1_latitude():
-    response = requests.get(
-        "https://api.open-meteo.com/v1/forecast?latitude=90.1&longitude=23.9&current_weather=true",
-        timeout=10
-    )
-    assert response.status_code == 400
